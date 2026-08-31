@@ -1,7 +1,10 @@
+
+import "dotenv" ; 
 import { generateEmbeding } from "./embed.js";
 
 async function testEmbedding(){
-    const text = "Karishna Explain Karma Yoga to Arjun.";
+    // const text = "Karishna Explain Karma Yoga to Arjun.";
+    const text = "What is Dharma";
     const embedding = await generateEmbeding(text);
     
     console.log("Embedding generated successfully");

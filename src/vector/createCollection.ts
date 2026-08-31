@@ -12,19 +12,24 @@ const createCOllection = async ()=> {
         );
 
         if(exists){
-            console.log(`Collection "${COLLECTION_NAME}" already exists.`);
-            return;
+            console.log("Deleting old collection...");
+
+            await qdrant.deleteCollection(COLLECTION_NAME);
+
+            console.log("Old collection deleted."); 
         }
+
+         console.log("Creating new collection...");
 
         await qdrant.recreateCollection(COLLECTION_NAME, {
              vectors: {
-               size: 3072,
+               size: 1024,
                distance:"Cosine",
              },
         });
 
         console.log(
-          `Collection "${COLLECTION_NAME}" created successfully!`
+          `Collection "${COLLECTION_NAME}" created  with 1024 dimension successfully!`
         );
     } catch (error){
         console.error("Error creating collection:", error);
