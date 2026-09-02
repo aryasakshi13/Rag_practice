@@ -39,9 +39,15 @@ export const askQuestion = async (
     context
   );
 
+   const sources = results.map((result) => ({
+        score: result.score,
+        chunkIndex: result.payload?.chunkIndex,
+        documentName: result.payload?.documentName,
+    }));
+
   return {
     answer,
-    sources: results,
+    sources,
   };
 
 
