@@ -1,13 +1,35 @@
+// export interface FusionDocument {
+//   content: string;
+//   documentName: string;
+//   chunkIndex: number;
+//   qdrantScore: number | undefined;
+//   bm25Score: number | undefined;
+//   source: "dense" | "bm25" | "both";
+// }
+
+// export interface FusedDocument extends FusionDocument {
+//   rrfScore: number;
+// }
+
 export interface FusionDocument {
   content: string;
   documentName: string;
   chunkIndex: number;
-  qdrantScore?: number;
-  bm25Score?: number;
+  qdrantScore: number | undefined;
+  bm25Score: number | undefined;
   source: "dense" | "bm25";
 }
 
-export interface FusedDocument extends FusionDocument {
+export interface FusedDocument {
+  content: string;
+  documentName: string;
+  chunkIndex: number;
+
+  qdrantScore: number | undefined;
+  bm25Score: number | undefined;
+
+  source: "dense" | "bm25" | "both";
+
   rrfScore: number;
 }
 
@@ -17,64 +39,100 @@ export const reciprocalRankFusion = (
   k: number = 60
 ): FusedDocument[] => {
 
-  const scoreMap = new Map<string, number>();
   const documentMap = new Map<string, FusedDocument>();
 
+  // -------------------------
   // Dense results
+  // -------------------------
+
   denseResults.forEach((doc, index) => {
 
     const key = `${doc.documentName}-${doc.chunkIndex}`;
 
     const rank = index + 1;
 
-    const score = 1 / (k + rank);
+    const rrfScore = 1 / (k + rank);
 
-    scoreMap.set(
-      key,
-      (scoreMap.get(key) || 0) + score
-    );
+    const existing = documentMap.get(key);
 
-    if (!documentMap.has(key)) {
+    if (existing) {
+
+      existing.rrfScore += rrfScore;
+
+      existing.source = "both";
+
+    } else {
+
       documentMap.set(key, {
-        ...doc,
-        rrfScore: 0
+        content: doc.content,
+        documentName: doc.documentName,
+        chunkIndex: doc.chunkIndex,
+
+        qdrantScore: doc.qdrantScore,
+
+        bm25Score: undefined,
+
+        source: "dense",
+
+        rrfScore
       });
+
     }
   });
 
 
+  // -------------------------
   // BM25 results
+  // -------------------------
+
   bm25Results.forEach((doc, index) => {
 
     const key = `${doc.documentName}-${doc.chunkIndex}`;
 
     const rank = index + 1;
 
-    const score = 1 / (k + rank);
+    const rrfScore = 1 / (k + rank);
 
-    scoreMap.set(
-      key,
-      (scoreMap.get(key) || 0) + score
-    );
+    const existing = documentMap.get(key);
 
-    if (!documentMap.has(key)) {
+    if (existing) {
+
+      existing.rrfScore += rrfScore;
+
+      existing.source = "both";
+
+      existing.bm25Score = doc.bm25Score;
+
+    } else {
+
       documentMap.set(key, {
-        ...doc,
-        rrfScore: 0
+
+        content: doc.content,
+        documentName: doc.documentName,
+        chunkIndex: doc.chunkIndex,
+
+        qdrantScore: undefined,
+
+        bm25Score: doc.bm25Score,
+
+        source: "bm25",
+
+        rrfScore
+
       });
+
     }
   });
 
 
-  // Add final RRF scores
-  const results = Array.from(documentMap.entries())
-    .map(([key, doc]) => ({
-      ...doc,
-      rrfScore: scoreMap.get(key) || 0
-    }));
+  // -------------------------
+  // Sort by RRF score
+  // -------------------------
 
+  const results = Array.from(
+    documentMap.values()
+  );
 
-  // Highest RRF score first
   return results.sort(
     (a, b) => b.rrfScore - a.rrfScore
   );

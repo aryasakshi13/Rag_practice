@@ -41,7 +41,8 @@ export const askQuestion = async (
           chunkIndex: result.payload?.chunkIndex,
 
           qdrantScore: result.score,
-
+           
+          
           source: "dense" as const,
 
        }))
@@ -119,11 +120,6 @@ export const askQuestion = async (
       }))
     );
 
-
-
-
-
-
     // ......
     // Cohere Reranking 
     // .....
@@ -166,16 +162,61 @@ export const askQuestion = async (
   // ......
   //  Reranker
   //  ........
+
    const rerankedResults = await rerankResults(
     question,
     candidates,
     5
   );
 
-  console.log("Total retrieved:", rerankedResults.length);
+  console.log(
+  "Reranked results BEFORE threshold:",
+  rerankedResults.map((result) => ({
+    chunkIndex: result.chunkIndex,
+    rerankScore: result.rerankScore,
+    rrfScore: result.rrfScore,
+    source: result.source,
+    content: result.content?.slice(0, 500),
+  }))
+);
+
+  // .... Add min thrushold instead of giving top 5 will give thrushold result...
+
+   const minRerankScore = 0.50;
+
+  //  .... Relebvant Result .......
+
+  const relevantResults = rerankedResults.filter((result) => 
+    result.rerankScore !== undefined && 
+    result.rerankScore  >= minRerankScore
+);
+
+
+
+
+if (relevantResults.length === 0) {
+  return {
+    answer:
+      "I couldn't find relevant information in the Bhagavad Gita.",
+    sources: [],
+  };
+}
+ 
+ console.log("REranked scores:", 
+  rerankedResults.map((result) => ({
+    
+    chunkIndex: result.chunkIndex,
+    rerankScore: result.rerankScore,
+  }))
+ );
+  
+
+
+
+  console.log("Total retrieved:", relevantResults.length);
 
   // 3. Extract relevant content
-  const context = rerankedResults
+  const context = relevantResults
     .map((result) => result.content)
     .filter(
       (content): content is string =>
@@ -199,7 +240,7 @@ export const askQuestion = async (
 
   //  reranler prepare sources
 
-   const sources = rerankedResults.map(
+   const sources = relevantResults.map(
         (result) => ({
             qdrantScore: result.qdrantScore,
             bm25Score: result.bm25Score,
@@ -209,9 +250,6 @@ export const askQuestion = async (
             source: result.source,
             rrfScore: result.rrfScore,
         })
-
-
-
         
     );
 
