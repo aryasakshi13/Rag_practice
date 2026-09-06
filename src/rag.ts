@@ -3,6 +3,7 @@ import { searchVectors } from "./vector/searchVectors.js";
 import { generateAnswer } from "./llm/generateAnswer.js";
 import { rerankResults } from "./reranker/reranker.js";
 import { searchBM25 } from "./Bm25/bm25Index.js";
+import { reciprocalRankFusion } from "./retrieval/rrf.js";
 
 export const askQuestion = async (
     question:string 
@@ -21,13 +22,13 @@ export const askQuestion = async (
 
   const results = await searchVectors(
     queryEmbedding,
-    8
+    20
   );
 
   //  keyword Search - BM25 
    console.log("Searching BM25...");
 
-    const bm25Results = searchBM25( question, 10);
+    const bm25Results = searchBM25( question, 20);
 
     console.log("BM25 Results:", bm25Results.length);
 
@@ -41,40 +42,91 @@ export const askQuestion = async (
 
           qdrantScore: result.score,
 
-          source: "dense",
+          source: "dense" as const,
 
-       })
+       }))
+       .filter(
+        (
+        result
+       ): result is {
+         content: string;
+          documentName: string;
+          chunkIndex: number;
+          qdrantScore: number;
+          source: "dense";
+       } =>
+        typeof result.content === "string" &&
+        typeof result.documentName === "string" &&
+        typeof result.chunkIndex === "number"  
+      );
 
-     );
+
 
      const keywordResults = bm25Results.map((result) => ({
           content: result.content,
           documentName: result.documentName,
           chunkIndex: result.chunkIndex,
-          qdrantScore: undefined, // No Qdrant score for BM25 results
           bm25Score: result.bm25Score,
-          source: "bm25",
+          source: "bm25" as const,
 
       })
     );
+    //  .........
+        // normal fusion - not rrf 
+        // .........
 
-    const combinedResults = [...denseResults, ...keywordResults];
+    // const combinedResults = [...denseResults, ...keywordResults];
 
-    console.log("Total combined results:", combinedResults.length);
+    // console.log("Total combined results:", combinedResults.length);
 
-    const uniqueResults = Array.from(
-      new Map(
+    // const uniqueResults = Array.from(
+    //   new Map(
 
-        combinedResults.map((result) => [
-          `${result.documentName}-${result.chunkIndex}`,
-           result,
-        ])
-      ).values()
-    )
+    //     combinedResults.map((result) => [
+    //       `${result.documentName}-${result.chunkIndex}`,
+    //        result,
+    //     ])
+    //   ).values()
+    // )
 
-    console.log("Unique results after deduplication:", uniqueResults.length);
+    // console.log("Unique results after deduplication:", uniqueResults.length);
 
+    
+
+    // ........
+    //  rrf fusion
+    // .........
+
+
+      const fusedResults = reciprocalRankFusion(
+          denseResults,
+          keywordResults
+      );
+
+    console.log(
+      "Total fused results:",
+      fusedResults.length
+    );
+
+    console.log(
+      "RRF Results:",
+      fusedResults.map((result) => ({
+        chunkIndex: result.chunkIndex,
+        rrfScore: result.rrfScore,
+        qdrantScore: result.qdrantScore,
+        bm25Score: result.bm25Score,
+        source: result.source
+      }))
+    );
+
+
+
+
+
+
+    // ......
     // Cohere Reranking 
+    // .....
 
     console.log("Reranking results...");
 
@@ -107,11 +159,16 @@ export const askQuestion = async (
   //   );
 
 
-  //  Reranker 
 
+   const candidates = fusedResults.slice(0, 15);
+
+
+  // ......
+  //  Reranker
+  //  ........
    const rerankedResults = await rerankResults(
     question,
-    uniqueResults,
+    candidates,
     5
   );
 
@@ -147,15 +204,10 @@ export const askQuestion = async (
             qdrantScore: result.qdrantScore,
             bm25Score: result.bm25Score,
             rerankScore: result.rerankScore,
-            chunkIndex:
-                result.chunkIndex,
-
-            documentName:
-                result.documentName, 
-                
-            
-
+            chunkIndex:result.chunkIndex,
+            documentName:result.documentName,   
             source: result.source,
+            rrfScore: result.rrfScore,
         })
 
 
