@@ -5,7 +5,9 @@ import { searchVectors } from "./vector/searchVectors.js";
 
 const main = async () => {
   const question =
-    "What is Dharma according to Bhagavad Gita?";
+    // "What is Dharma according to Bhagavad Gita?";
+
+     "What is Karma Yoga?";
 
   console.log("Question:");
   console.log(question);

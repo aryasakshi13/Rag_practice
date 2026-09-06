@@ -3,6 +3,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 
 import ragRoutes from "./routes/ragRoutes.js";
+import {initializeBM25} from "./Bm25/initializeBM25.js";
+
 
 dotenv.config();
 
@@ -22,6 +24,25 @@ app.use("/api", ragRoutes);
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+
+// app.listen(PORT, () => {
+//     console.log(`Server running on port ${PORT}`);
+// });
+
+const startServer = async () => {
+    try{
+        await initializeBM25();
+
+        app.listen(PORT,  () =>{
+            console.log(`server running on port ${PORT}`);
+        });
+    
+    } catch (error) {
+        console.error("Error starting server:", error);
+
+        process.exit(1);
+    }
+
+};
+
+startServer();

@@ -23,10 +23,12 @@
     "@google/genai": "^2.19.0",
     "@qdrant/js-client-rest": "^1.18.0",
     "axios": "^1.20.0",
+    "cohere-ai": "^8.1.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "pdf-parse": "^1.1.4",
-    "sharp": "^0.35.3"
+    "sharp": "^0.35.3",
+    "wink-bm25-text-search": "^3.1.2"
   }
 }

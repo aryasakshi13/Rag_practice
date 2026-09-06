@@ -18,14 +18,29 @@ const main = async () => {
 
   result.sources.forEach((source, index) => {
     console.log(
-      `${index + 1}. Chunk ${source.payload?.chunkIndex}`
+      `${index + 1}. Chunk ${source.chunkIndex}`
     );
 
     console.log(
-      `Score: ${source.score}`
+                `Qdrant Score: ${source.qdrantScore}`
+            );
+
+
+    console.log(
+      `BM25 Score: ${source.bm25Score}`
     );
 
+    console.log(
+                `Rerank Score: ${source.rerankScore}`
+            );
+
     console.log();
+
+      console.log(
+                `Document: ${source.documentName}`
+            );
+
+            console.log();
   });
 };
 
