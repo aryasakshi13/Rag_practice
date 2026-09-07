@@ -4,7 +4,9 @@ import { askQuestion } from "../rag.js";
 export  async function ragApi(req:Request, res:Response){
 
     try{
-         const {question } = req.body;
+        //  const {question } = req.body;
+
+         const { question, chatHistory } = req.body;
 
          if(!question || typeof question !== "string"){
             return res.status(400).json({
@@ -13,7 +15,10 @@ export  async function ragApi(req:Request, res:Response){
             })
          }
 
-         const result = await askQuestion(question)
+        //  const result = await askQuestion(question)
+
+    const result = await askQuestion(question, chatHistory || []);
+
 
           return res.status(200).json({
             success: true,
