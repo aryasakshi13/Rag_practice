@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 
 import ragRoutes from "./routes/ragRoutes.js";
 import {initializeBM25} from "./Bm25/initializeBM25.js";
+import evaluationRoutes from "./routes/evaluationRoutes.js";
 
 
 dotenv.config();
@@ -22,6 +23,9 @@ app.get("/", (req, res) => {
 
 app.use("/api", ragRoutes);
 
+app.use("/api", evaluationRoutes);
+
+
 const PORT = process.env.PORT || 5000;
 
 
@@ -33,9 +37,20 @@ const startServer = async () => {
     try{
         await initializeBM25();
 
-        app.listen(PORT,  () =>{
+        const server = app.listen(PORT,  () =>{
             console.log(`server running on port ${PORT}`);
+             console.log(`PID: ${process.pid}`);
         });
+
+         server.on("error", (error) => {
+            console.error("SERVER ERROR:", error);
+        });
+
+          server.on("close", () => {
+            console.log("SERVER CLOSED");
+        });
+
+
     
     } catch (error) {
         console.error("Error starting server:", error);
