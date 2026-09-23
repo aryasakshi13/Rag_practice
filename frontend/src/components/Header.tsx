@@ -6,7 +6,32 @@ import {
   Typography,
 } from "@mui/material";
 
+import { useEffect, useState } from "react";
+
+
+
 function Header() {
+
+  const [online, setOnline] = useState(false);
+
+  useEffect(() => {
+  const checkBackend = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/");
+
+      setOnline(response.ok);
+    } catch {
+      setOnline(false);
+    }
+  };
+
+  checkBackend();
+
+  const interval = setInterval(checkBackend, 10000);
+
+  return () => clearInterval(interval);
+}, []);
+
   return (
     <Box
       sx={{
