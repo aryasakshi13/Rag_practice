@@ -11,6 +11,7 @@ import type { ChatMessage } from "./components/types/rag";
 
 function App() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
 
   const handleQuestion = async (question: string) => {
@@ -24,6 +25,9 @@ function App() {
 
     setMessages((previous) => [...previous, userMessage]);
 
+    setChatHistory((previous) => [...previous, userMessage]);
+
+
     setLoading(true);
 
     try {
@@ -31,21 +35,28 @@ function App() {
 
       const response = await askQuestion(question);
 
-      const assistantMessage: ChatMessage ={
+      const assistantMessage: ChatMessage = {
         id: crypto.randomUUID(),
-        role:"user",
-        content:response.answer,
+        role: "assistant",
+        content: response.answer,
 
       };
 
-      setMessages((previous)=>[...previous, assistantMessage]);
+      setMessages((previous) => [...previous, assistantMessage]);
 
     } catch (error) {
-      console.error("Error asking question:",error);
+      console.error("Error asking question:", error);
     } finally {
       setLoading(false);
     }
+
   };
+
+
+  const handleNewChat = () => {
+      setMessages([]);
+    };
+
 
   return (
     <Box
@@ -56,9 +67,9 @@ function App() {
         backgroundColor: "background.default",
       }}
     >
-     <Sidebar
-      onNewChat={() => setMessages([])} 
-       messages={messages}
+      <Sidebar
+        onNewChat={handleNewChat}
+        messages={chatHistory}
       />
 
       <Box
@@ -75,6 +86,7 @@ function App() {
         <ChatArea
           messages={messages}
           loading={loading}
+          onSuggestionClick={handleQuestion}
         />
 
         <QuestionInput

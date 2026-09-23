@@ -12,9 +12,10 @@ import type { ChatMessage } from "./types/rag";
 interface ChatAreaProps {
   messages: ChatMessage[];
   loading: boolean;
+  onSuggestionClick :(question: string) => void ;
 }
 
-function ChatArea({messages, loading}: ChatAreaProps) {
+function ChatArea({messages, loading, onSuggestionClick}: ChatAreaProps) {
   const suggestions = [
     "What is Karma?",
     "What is Dharma?",
@@ -111,6 +112,8 @@ function ChatArea({messages, loading}: ChatAreaProps) {
               key={suggestion}
               variant="outlined"
               size="small"
+               onClick={() => onSuggestionClick(suggestion)}
+               disabled={loading}
               sx={{
                 borderRadius: 2,
                 px: 2,
@@ -170,7 +173,7 @@ function ChatArea({messages, loading}: ChatAreaProps) {
                     ? "white"
                     : "text.primary",
                 border:
-                  message.role === "assitant"
+                  message.role === "assistant"
                     ? "1px solid"
                     : "none",
                 borderColor: "divider",
