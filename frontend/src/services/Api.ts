@@ -11,7 +11,7 @@ export interface Source {
   source?: string;
 }
 
-const API_URL = "http://localhost:5000";
+const API_URL = "https://rag-practice-2z8a.onrender.com";
 
 export async function askQuestion(
   question: string
