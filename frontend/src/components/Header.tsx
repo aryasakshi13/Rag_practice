@@ -86,11 +86,13 @@ function Header() {
             <Circle
               sx={{
                 fontSize: "8px !important",
-                color: "#4CAF50 !important",
+                 color: online
+                    ? "#4CAF50 !important"
+                    : "#f44336 !important",
               }}
             />
           }
-          label="Online"
+          label={online ? "online" : "Offline"}
           size="small"
           variant="outlined"
         />
